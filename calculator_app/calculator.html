@@ -149,6 +149,185 @@
           data.appendStringParenthesis(elem.innerText);
         });
       });
+    
+     
+      // Assignment 1 -  Node class 
+class Node {
+  constructor(val = null, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+// Add calculation functionality
+data.calculate = function() {
+  try {
+    // Build the expression tree 
+    const tree = this.buildExpressionTree(this.displayString);
+    const result = this.evaluateTree(tree);
+    
+    // Update display alongside with result
+    this.displayString = String(result);
+    this.updateDisplay();
+  } catch (error) {
+    console.error("Calculation error:", error);
+    this.displayString = "Error";
+    this.updateDisplay();
+  }
+};
+
+// Convert infix expression to expression tree
+data.buildExpressionTree = function(expression) {
+  // convert infix to postfix using a stack firstly.
+  const postfix = this.infixToPostfix(expression);
+  
+  // Then, build the tree from postfix
+  const stack = [];
+  
+  for (let i = 0; i < postfix.length; i++) {
+    const token = postfix[i];
+    
+    if (!this.isOperator(token)) {
+      // If token is a number, create a leaf node
+      stack.push(new Node(parseFloat(token)));
+    } else {
+      // If token is an operator, pop two values from stack
+      const right = stack.pop();
+      const left = stack.pop();
+      
+      // Create a new node with the operator and the two nodes as children
+      stack.push(new Node(token, left, right));
+    }
+  }
+  
+  // The final node on the stack is now the root of the expression tree
+  return stack.pop();
+};
+
+// Helper function to convert infix to postfix notation
+data.infixToPostfix = function(expression) {
+  const tokens = this.tokenize(expression);
+  const output = [];
+  const operatorStack = [];
+  
+  for (let i = 0; i < tokens.length; i++) {
+    const token = tokens[i];
+    
+    if (!isNaN(parseFloat(token))) {
+      // If token is a number, add it to the output
+      output.push(token);
+    } else if (this.isOperator(token)) {
+      // If token is an operator
+      while (
+        operatorStack.length > 0 &&
+        this.isOperator(operatorStack[operatorStack.length - 1]) &&
+        this.getPrecedence(operatorStack[operatorStack.length - 1]) >= this.getPrecedence(token)
+      ) {
+        output.push(operatorStack.pop());
+      }
+      operatorStack.push(token);
+    } else if (token === "(") {
+      operatorStack.push(token);
+    } else if (token === ")") {
+      while (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] !== "(") {
+        output.push(operatorStack.pop());
+      }
+      if (operatorStack.length > 0 && operatorStack[operatorStack.length - 1] === "(") {
+        operatorStack.pop(); // Remove the "("
+      }
+    }
+  }
+  
+  // Pop remaining operators from the stack
+  while (operatorStack.length > 0) {
+    output.push(operatorStack.pop());
+  }
+  
+  return output;
+};
+
+// Tokenize the expression string
+data.tokenize = function(expression) {
+  const tokens = [];
+  let currentNumber = "";
+  
+  for (let i = 0; i < expression.length; i++) {
+    const char = expression[i];
+    
+    if (numberStrs.includes(char) || char === ".") {
+      currentNumber += char;
+    } else {
+      if (currentNumber !== "") {
+        tokens.push(currentNumber);
+        currentNumber = "";
+      }
+      if (char !== " ") { // Skip spaces
+        tokens.push(char);
+      }
+    }
+  }
+  
+  // Don't forget the last number
+  if (currentNumber !== "") {
+    tokens.push(currentNumber);
+  }
+  
+  return tokens;
+};
+
+// Check if a token is an operator
+data.isOperator = function(token) {
+  return ["+", "-", "*", "/"].includes(token);
+};
+
+// Get operator precedence
+data.getPrecedence = function(operator) {
+  if (operator === "+" || operator === "-") {
+    return 1;
+  }
+  if (operator === "*" || operator === "/") {
+    return 2;
+  }
+  return 0;
+};
+
+// Evaluate the expression tree recursively
+data.evaluateTree = function(root) {
+  if (!root) {
+    return 0;
+  }
+  
+  // If node is a leaf (number), return its value
+  if (!root.left && !root.right) {
+    return root.val;
+  }
+  
+  // Evaluate left and right subtrees
+  const leftValue = this.evaluateTree(root.left);
+  const rightValue = this.evaluateTree(root.right);
+  
+  // Apply the operation
+  switch (root.val) {
+    case "+":
+      return leftValue + rightValue;
+    case "-":
+      return leftValue - rightValue;
+    case "*":
+      return leftValue * rightValue;
+    case "/":
+      return leftValue / rightValue;
+    default:
+      return 0;
+  }
+};
+
+// Add event listener for equals button
+document.querySelector(".equals").addEventListener("click", function() {
+  data.calculate();
+});
+      
     </script>
   </body>
 </html>
+
